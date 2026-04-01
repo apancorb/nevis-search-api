@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:172.18.0.2}:5432/nevis_search
-    username: nevis
-    password: nevis
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:nevis_search}
+    username: ${DB_USER:nevis}
+    password: ${DB_PASSWORD:nevis}
   ai:
     openai:
       api-key: ""

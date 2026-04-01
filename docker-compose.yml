@@ -2,15 +2,15 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: nevis_search
-      POSTGRES_USER: nevis
-      POSTGRES_PASSWORD: nevis
+      POSTGRES_DB: ${DB_NAME:-nevis_search}
+      POSTGRES_USER: ${DB_USER:-nevis}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nevis}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nevis -d nevis_search"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-nevis} -d ${DB_NAME:-nevis_search}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,9 +23,11 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nevis_search
-      SPRING_DATASOURCE_USERNAME: nevis
-      SPRING_DATASOURCE_PASSWORD: nevis
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-nevis_search}
+      DB_USER: ${DB_USER:-nevis}
+      DB_PASSWORD: ${DB_PASSWORD:-nevis}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
 
 volumes:
