@@ -54,6 +54,27 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured")
 }
 
+tasks.register<Exec>("startTestDb") {
+    commandLine("docker", "compose", "up", "postgres", "-d", "--wait")
+}
+
+tasks.register<Exec>("stopTestDb") {
+    commandLine("docker", "compose", "down")
+    isIgnoreExitValue = true
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
+    dependsOn("startTestDb")
+    finalizedBy("stopTestDb")
+    doFirst {
+        val process = ProcessBuilder(
+            "docker", "inspect", "-f",
+            "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}",
+            "nevis-search-api-postgres-1"
+        ).start()
+        val dbHost = process.inputStream.bufferedReader().readText().trim()
+        process.waitFor()
+        environment("DB_HOST", dbHost)
+    }
 }
