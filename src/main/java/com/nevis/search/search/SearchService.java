@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -94,15 +96,27 @@ public class SearchService {
                 return List.of();
             }
 
-            return results.stream()
-                    .map(doc -> {
-                        Map<String, Object> metadata = doc.getMetadata();
-                        UUID documentId = UUID.fromString((String) metadata.get("document_id"));
-                        Document document = documentRepository.findById(documentId).orElse(null);
-                        if (document == null) return null;
+            // Collect all document IDs and scores from vector results
+            Map<UUID, Double> scoresByDocumentId = new LinkedHashMap<>();
+            for (org.springframework.ai.document.Document doc : results) {
+                Map<String, Object> metadata = doc.getMetadata();
+                UUID documentId = UUID.fromString((String) metadata.get("document_id"));
+                double score = doc.getScore() != null ? doc.getScore() : 0.0;
+                scoresByDocumentId.put(documentId, score);
+            }
 
-                        double score = doc.getScore() != null ? doc.getScore() : 0.0;
-                        return SearchResult.ofDocument(DocumentResponse.from(document), score);
+            // Single batch query instead of N+1
+            List<Document> documents = documentRepository.findAllById(scoresByDocumentId.keySet());
+            Map<UUID, Document> documentsById = new HashMap<>();
+            for (Document doc : documents) {
+                documentsById.put(doc.getId(), doc);
+            }
+
+            return scoresByDocumentId.entrySet().stream()
+                    .map(entry -> {
+                        Document document = documentsById.get(entry.getKey());
+                        if (document == null) return null;
+                        return SearchResult.ofDocument(DocumentResponse.from(document), entry.getValue());
                     })
                     .filter(Objects::nonNull)
                     .toList();
