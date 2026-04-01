@@ -1,0 +1,6 @@
+spring:
+  ai:
+    openai:
+      api-key: ""
+  flyway:
+    enabled: true
