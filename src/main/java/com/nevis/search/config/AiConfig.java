@@ -21,7 +21,7 @@ public class AiConfig {
             @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.api-key}") String apiKey,
             @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.chat.options.model:gpt-4o-mini}") String model) {
         log.info("OpenAI API key detected - enabling document summarization with model: {}", model);
-        var api = OpenAiApi.builder().apiKey(apiKey).build();
+        OpenAiApi api = OpenAiApi.builder().apiKey(apiKey).build();
         return OpenAiChatModel.builder()
                 .openAiApi(api)
                 .defaultOptions(OpenAiChatOptions.builder().model(model).build())

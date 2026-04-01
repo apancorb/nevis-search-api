@@ -29,7 +29,7 @@ public class DocumentController {
     @Operation(summary = "Create a document for a client")
     public DocumentResponse create(@PathVariable UUID clientId,
                                    @Valid @RequestBody CreateDocumentRequest request) {
-        var document = documentService.create(clientId, request);
+        Document document = documentService.create(clientId, request);
         return DocumentResponse.from(document);
     }
 }

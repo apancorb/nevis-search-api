@@ -1,7 +1,9 @@
 package com.nevis.search.search;
 
+import com.nevis.search.client.Client;
 import com.nevis.search.client.ClientResponse;
 import com.nevis.search.client.ClientService;
+import com.nevis.search.document.Document;
 import com.nevis.search.document.DocumentRepository;
 import com.nevis.search.document.DocumentResponse;
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -42,14 +45,14 @@ public class SearchService {
         long startTime = System.currentTimeMillis();
 
         // Run client and document searches in parallel
-        var clientFuture = CompletableFuture.supplyAsync(() -> searchClients(query));
-        var documentFuture = CompletableFuture.supplyAsync(() -> searchDocuments(query));
+        CompletableFuture<List<SearchResult>> clientFuture = CompletableFuture.supplyAsync(() -> searchClients(query));
+        CompletableFuture<List<SearchResult>> documentFuture = CompletableFuture.supplyAsync(() -> searchDocuments(query));
 
-        var clientResults = clientFuture.join();
-        var documentResults = documentFuture.join();
+        List<SearchResult> clientResults = clientFuture.join();
+        List<SearchResult> documentResults = documentFuture.join();
 
         // Merge, sort by score descending, limit
-        var allResults = Stream.concat(clientResults.stream(), documentResults.stream())
+        List<SearchResult> allResults = Stream.concat(clientResults.stream(), documentResults.stream())
                 .sorted(Comparator.comparingDouble(SearchResult::score).reversed())
                 .limit(resultLimit)
                 .toList();
@@ -65,7 +68,7 @@ public class SearchService {
 
     private List<SearchResult> searchClients(String query) {
         try {
-            var clients = clientService.search(query, resultLimit);
+            List<Client> clients = clientService.search(query, resultLimit);
             return clients.stream()
                     .map(client -> {
                         double score = scoreClientMatch(client.getEmail(), client.getFirstName(),
@@ -81,21 +84,21 @@ public class SearchService {
 
     private List<SearchResult> searchDocuments(String query) {
         try {
-            var searchRequest = SearchRequest.builder()
+            SearchRequest searchRequest = SearchRequest.builder()
                     .query(query)
                     .topK(resultLimit)
                     .build();
 
-            var results = vectorStore.similaritySearch(searchRequest);
+            List<org.springframework.ai.document.Document> results = vectorStore.similaritySearch(searchRequest);
             if (results == null || results.isEmpty()) {
                 return List.of();
             }
 
             return results.stream()
                     .map(doc -> {
-                        var metadata = doc.getMetadata();
-                        var documentId = UUID.fromString((String) metadata.get("document_id"));
-                        var document = documentRepository.findById(documentId).orElse(null);
+                        Map<String, Object> metadata = doc.getMetadata();
+                        UUID documentId = UUID.fromString((String) metadata.get("document_id"));
+                        Document document = documentRepository.findById(documentId).orElse(null);
                         if (document == null) return null;
 
                         double score = doc.getScore() != null ? doc.getScore() : 0.0;

@@ -25,7 +25,7 @@ public class ClientController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new client")
     public ClientResponse create(@Valid @RequestBody CreateClientRequest request) {
-        var client = clientService.create(request);
+        Client client = clientService.create(request);
         return ClientResponse.from(client);
     }
 }

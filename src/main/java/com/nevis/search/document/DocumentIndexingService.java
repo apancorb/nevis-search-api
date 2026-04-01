@@ -38,7 +38,7 @@ public class DocumentIndexingService {
     private void embedDocument(Document document) {
         try {
             String textToEmbed = document.getTitle() + "\n" + document.getContent();
-            var aiDoc = new org.springframework.ai.document.Document(textToEmbed, Map.of(
+            org.springframework.ai.document.Document aiDoc = new org.springframework.ai.document.Document(textToEmbed, Map.of(
                     "document_id", document.getId().toString(),
                     "client_id", document.getClientId().toString(),
                     "title", document.getTitle()

@@ -18,7 +18,7 @@ public class ClientService {
 
     @Transactional
     public Client create(CreateClientRequest request) {
-        var client = new Client(
+        Client client = new Client(
                 request.firstName(),
                 request.lastName(),
                 request.email(),

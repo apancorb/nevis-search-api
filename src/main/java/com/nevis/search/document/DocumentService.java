@@ -1,5 +1,6 @@
 package com.nevis.search.document;
 
+import com.nevis.search.client.Client;
 import com.nevis.search.client.ClientService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +24,8 @@ public class DocumentService {
 
     @Transactional
     public Document create(UUID clientId, CreateDocumentRequest request) {
-        var client = clientService.findById(clientId);
-        var document = new Document(client, request.title(), request.content());
+        Client client = clientService.findById(clientId);
+        Document document = new Document(client, request.title(), request.content());
         document = documentRepository.save(document);
         indexingService.indexDocument(document);
         return document;
