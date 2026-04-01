@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -97,7 +96,7 @@ public class SearchService {
             }
 
             // Collect all document IDs and scores from vector results
-            Map<UUID, Double> scoresByDocumentId = new LinkedHashMap<>();
+            Map<UUID, Double> scoresByDocumentId = new HashMap<>();
             for (org.springframework.ai.document.Document doc : results) {
                 Map<String, Object> metadata = doc.getMetadata();
                 UUID documentId = UUID.fromString((String) metadata.get("document_id"));
